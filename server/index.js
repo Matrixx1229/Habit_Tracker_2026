@@ -9,11 +9,24 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
 // Middleware
 app.use(cors());
 app.use(bodyParser.json());
+
+// Serve static files from the React app
+// We assume 'dist' will be in the root, one level up from 'server' if server is in 'server/' folder,
+// BUT currently the 'server' folder is inside root, and 'dist' is in root.
+// So relative to 'server/index.js', 'dist' is '../dist'.
+app.use(express.static(path.join(__dirname, '../dist')));
+
+// Handle React routing, return all requests to React app
+app.get('*', (req, res, next) => {
+    if (req.path.startsWith('/api')) return next();
+    res.sendFile(path.join(__dirname, '../dist/index.html'));
+});
+
 
 // Database Setup
 const dbPath = path.resolve(__dirname, 'habit_tracker.db');
